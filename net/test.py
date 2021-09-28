@@ -40,8 +40,8 @@ print("pred_dir:", output_dir)
 if not os.path.exists(output_dir):
     os.mkdir(output_dir)
 model_dir = abs + f"trained_models/{dataset}_train_ffa_{gps}_{blocks}.pk"
-# device = "cuda" if torch.cuda.is_available() else "cpu"
-device = "cpu"
+device = "cuda" if torch.cuda.is_available() else "cpu"
+# device = "cpu"
 ckp = torch.load(model_dir, map_location=device)
 net = FFA(gps=gps, blocks=blocks).to(device=device)
 net.load_state_dict(ckp["model"])
