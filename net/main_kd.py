@@ -122,7 +122,7 @@ def train_kd(
             out_teacher.cuda()
 
         # compute KD loss
-        loss = loss _func_kd(out, out_teacher, y, criterion, params)
+        loss = loss_func_kd(out, out_teacher, y, criterion, params)
 
         # clear previous gradients, compute gradients of all variables wrt loss
         optim.zero_grad()

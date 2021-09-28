@@ -9,7 +9,6 @@ from torch import optim
 import torch, warnings
 from torch import nn
 from tqdm import tqdm
-import wandb
 
 
 # from torch.utils.tensorboard import SummaryWriter
