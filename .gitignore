@@ -12,6 +12,7 @@ __pycache__/
 
 data/Haze
 data/RESIDE
+pred_FFA_its
 
 RESIDEV0/
 logs/
@@ -118,3 +119,5 @@ venv.bak/
 
 # result images
 samples/
+
+setup-devcloud-access-92439.sh

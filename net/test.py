@@ -1,3 +1,4 @@
+import time
 import os, argparse
 import numpy as np
 from PIL import Image
@@ -8,9 +9,7 @@ import torchvision.transforms as tfs
 import torchvision.utils as vutils
 import matplotlib.pyplot as plt
 from torchvision.utils import make_grid
-import gc
 
-gc.collect()
 
 torch.cuda.empty_cache()
 
@@ -34,31 +33,36 @@ parser.add_argument("--test_imgs", type=str, default="test", help="Test imgs fol
 opt = parser.parse_args()
 dataset = opt.task
 gps = 3
-blocks = 19
+blocks = 9
 img_dir = abs + opt.test_imgs + "/"
 output_dir = abs + f"pred_FFA_{dataset}/"
 print("pred_dir:", output_dir)
 if not os.path.exists(output_dir):
     os.mkdir(output_dir)
 model_dir = abs + f"trained_models/{dataset}_train_ffa_{gps}_{blocks}.pk"
-device = "cuda" if torch.cuda.is_available() else "cpu"
+# device = "cuda" if torch.cuda.is_available() else "cpu"
+device = "cpu"
 ckp = torch.load(model_dir, map_location=device)
-net = FFA(gps=gps, blocks=blocks)
+net = FFA(gps=gps, blocks=blocks).to(device=device)
 net.load_state_dict(ckp["model"])
 net.eval()
 
-for im in os.listdir(img_dir):
-    print(f"\r {im}", end="", flush=True)
+times = []
+for im in os.listdir(img_dir)[0:1]:
+    start_time = time.time()
     haze = Image.open(img_dir + im)
-    haze1 = tfs.Compose(
-        [tfs.ToTensor(), tfs.Normalize(mean=[0.64, 0.6, 0.58], std=[0.14, 0.15, 0.152])]
-    )(haze)[None, ::]
-    haze_no = tfs.ToTensor()(haze)[None, ::]
+    haze1 = tfs.Compose([tfs.ToTensor()])(haze)[None, ::].to(device=device)
+    print(f"{im} | {haze1.shape}")
+    compose_time = time.time()
     with torch.no_grad():
-        print("img:", haze1.is_cuda)
-        print(next(net.parameters()).device)
-        gc.collect()
         pred = net(haze1)
     ts = torch.squeeze(pred.clamp(0, 1).cpu())
+    pred_time = time.time()
     # tensorShow([haze_no, pred.clamp(0, 1).cpu()], ["haze", "pred"])
     vutils.save_image(ts, output_dir + im.split(".")[0] + "_FFA.png")
+    print(
+        f"compose time:{compose_time - start_time} | inference time : {pred_time - compose_time} | total time : {pred_time - compose_time}"
+    )
+    times.append(pred_time - compose_time)
+
+print("average time:", np.mean(times), " s")
